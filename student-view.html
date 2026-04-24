@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library Seat Availability - NIT Jalandhar</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#8b0000;--primary-d:#6b0000;--primary-l:#fdf0f0;--primary-b:#f5d0d0;
+  --bg:#f0f2f5;--surface:#fff;--border:#dde1e7;
+  --text:#1a1a2e;--text2:#555;--text3:#999;
+  --green:#2e7d32;--green-s:#e8f5e9;--green-b:#a5d6a7;
+  --red:#c62828;--red-s:#ffebee;--red-b:#ef9a9a;
+  --radius:6px;--shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+.header{background:#fff;border-bottom:3px solid var(--primary);padding:8px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand img{height:44px;width:auto;object-fit:contain;}
+.brand .hi{font-size:0.68rem;font-weight:500;color:var(--primary);}
+.brand h1{font-size:0.9rem;font-weight:700;color:var(--primary);}
+.brand p{font-size:0.65rem;color:var(--text2);}
+.clock-wrap{text-align:center;}
+.clock{font-size:1.1rem;font-weight:500;color:var(--primary);font-family:'Roboto Mono',monospace;}
+.date{font-size:0.65rem;color:var(--text2);margin-top:2px;}
+.ws-pill{display:flex;align-items:center;gap:6px;background:#f8f9fa;border:1px solid var(--border);border-radius:4px;padding:5px 12px;}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;transition:background .3s;}
+.ws-dot.on{background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.stats-bar{display:flex;gap:10px;padding:12px 24px;flex-wrap:wrap;background:#fff;border-bottom:1px solid var(--border);}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:10px 18px;display:flex;align-items:center;gap:10px;flex:1;min-width:130px;box-shadow:var(--shadow);border-left:4px solid var(--primary);}
+.stat-val{font-size:1.5rem;font-weight:700;line-height:1;}
+.stat-label{font-size:0.65rem;color:var(--text2);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;}
+.c-green{color:var(--green);}.c-red{color:var(--red);}.c-blue{color:var(--primary);}
+
+.floor-tabs-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.floor-tab{padding:11px 18px;border:none;background:transparent;font-family:'Roboto',sans-serif;font-size:0.8rem;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+.floor-tab:hover{color:var(--primary);}
+.floor-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:700;}
+.floor-tab .tab-count{font-size:0.65rem;background:var(--primary-l);color:var(--primary);border-radius:10px;padding:1px 7px;margin-left:5px;font-weight:700;}
+.floor-tab.active .tab-count{background:var(--primary);color:#fff;}
+
+.content{flex:1;overflow-y:auto;padding:0 24px 24px;}
+.floor-panel{display:none;padding-top:16px;}
+.floor-panel.active{display:block;}
+.floor-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:8px;border-left:3px solid var(--primary);padding-left:8px;}
+.floor-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.floor-stats{display:flex;gap:8px;margin-bottom:14px;}
+.fl-stat{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 14px;font-size:0.72rem;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow);}
+.fl-stat strong{font-weight:700;}
+
+.legend{display:flex;gap:16px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:8px 16px;margin-bottom:14px;flex-wrap:wrap;box-shadow:var(--shadow);}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:0.78rem;color:var(--text2);}
+.l-dot{width:13px;height:13px;border-radius:3px;}
+.l-free{background:var(--green-s);border:1px solid var(--green-b);}
+.l-occupied{background:var(--red-s);border:1px solid var(--red-b);}
+
+.table-unit{display:inline-flex;flex-direction:column;align-items:center;gap:3px;margin:0 8px 16px 0;}
+.seat-row{display:flex;gap:3px;}
+.table-block{background:#e8d5b0;border:1.5px solid #c4a96e;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700;color:#7a5c1e;text-transform:uppercase;letter-spacing:0.5px;}
+.seat{width:26px;height:26px;border-radius:3px;background:var(--green-s);border:1px solid var(--green-b);display:flex;align-items:center;justify-content:center;font-size:0.48rem;font-weight:700;color:var(--green);cursor:default;transition:transform .15s;flex-shrink:0;}
+.seat:hover{transform:scale(1.2);z-index:5;}
+.seat.occupied{background:var(--red-s);border-color:var(--red-b);color:var(--red);}
+
+.offline-banner{background:#fff3cd;border:1px solid #ffc107;border-radius:var(--radius);padding:10px 18px;margin:14px 0;font-size:0.83rem;color:#856404;display:none;}
+.offline-banner.show{display:block;}
+
+.footer{background:#fff;border-top:1px solid var(--border);padding:10px 24px;text-align:center;font-size:0.68rem;color:var(--text3);}
+.footer span{color:var(--primary);font-weight:500;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <img src="nitj_logo.png" alt="NITJ Logo">
+    <div>
+      <div class="hi">&#2337;&#2366; &#2348;&#2368; &#2310;&#2352; &#2309;&#2350;&#2381;&#2348;&#2375;&#2337;&#2325;&#2352; &#2352;&#2366;&#2359;&#2381;&#2335;&#2381;&#2352;&#2368;&#2351; &#2346;&#2381;&#2352;&#2380;&#2342;&#2381;&#2351;&#2379;&#2327;&#2367;&#2325;&#2368; &#2360;&#2306;&#2360;&#2381;&#2341;&#2366;&#2344;, &#2332;&#2366;&#2354;&#2344;&#2381;&#2343;&#2352;</div>
+      <h1>Dr. B.R. Ambedkar NIT Jalandhar</h1>
+      <p>Library Management System &mdash; Live Seat Availability</p>
+    </div>
+  </div>
+  <div class="clock-wrap">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="date" id="date">--</div>
+  </div>
+  <div class="ws-pill">
+    <div class="ws-dot" id="wsDot"></div>
+    <span id="wsLabel" style="font-size:0.72rem;color:var(--text2);">Connecting...</span>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card">
+    <div><div class="stat-val c-blue" id="totalCount">394</div><div class="stat-label">Total Seats</div></div>
+  </div>
+  <div class="stat-card">
+    <div><div class="stat-val c-green" id="availCount">394</div><div class="stat-label">Available</div></div>
+  </div>
+  <div class="stat-card">
+    <div><div class="stat-val c-red" id="occCount">0</div><div class="stat-label">Occupied</div></div>
+  </div>
+</div>
+
+<div class="floor-tabs-bar">
+  <button class="floor-tab active" id="ftab-G" onclick="switchFloor('G')">Ground Floor <span class="tab-count" id="fc-G">42 free</span></button>
+  <button class="floor-tab" id="ftab-1" onclick="switchFloor('1')">1st Floor <span class="tab-count" id="fc-1">114 free</span></button>
+  <button class="floor-tab" id="ftab-2" onclick="switchFloor('2')">2nd Floor <span class="tab-count" id="fc-2">144 free</span></button>
+  <button class="floor-tab" id="ftab-3" onclick="switchFloor('3')">3rd Floor <span class="tab-count" id="fc-3">90 free</span></button>
+</div>
+
+<div class="content">
+  <div class="offline-banner" id="offlineBanner">&#9888; Connection lost. Showing last known data. Reconnecting...</div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="l-dot l-free"></div> Available</div>
+    <div class="legend-item"><div class="l-dot l-occupied"></div> Occupied</div>
+    <div style="margin-left:auto;font-size:0.68rem;color:var(--text3);">Hover over a seat to see its number</div>
+  </div>
+
+  
+  <div class="floor-panel active" id="floor-G">
+    <div class="floor-title">Ground Floor &mdash; Reading Hall (42 Seats)</div>
+    <div class="floor-stats">
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div> Available: <strong id="gf-avail">42</strong></div>
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div> Occupied: <strong id="gf-occ">0</strong></div>
+    </div>
+    <div id="layout-G" style="display:flex;flex-wrap:wrap;gap:16px;"></div>
+  </div>
+
+  
+  <div class="floor-panel" id="floor-1">
+    <div class="floor-title">1st Floor &mdash; Main Reading Hall (114 Seats)</div>
+    <div class="floor-stats">
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div> Available: <strong id="1f-avail">114</strong></div>
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div> Occupied: <strong id="1f-occ">0</strong></div>
+    </div>
+    <div id="layout-1" style="display:flex;flex-wrap:wrap;gap:16px;"></div>
+  </div>
+
+  
+  <div class="floor-panel" id="floor-2">
+    <div class="floor-title">2nd Floor &mdash; Study Hall (144 Seats)</div>
+    <div class="floor-stats">
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div> Available: <strong id="2f-avail">144</strong></div>
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div> Occupied: <strong id="2f-occ">0</strong></div>
+    </div>
+    <div id="layout-2" style="display:flex;flex-wrap:wrap;gap:16px;"></div>
+  </div>
+
+  
+  <div class="floor-panel" id="floor-3">
+    <div class="floor-title">3rd Floor &mdash; Quiet Zone (90 Seats)</div>
+    <div class="floor-stats">
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div> Available: <strong id="3f-avail">90</strong></div>
+      <div class="fl-stat"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div> Occupied: <strong id="3f-occ">0</strong></div>
+    </div>
+    <div id="layout-3" style="display:flex;flex-wrap:wrap;gap:16px;"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Dr. B.R. Ambedkar National Institute of Technology Jalandhar</span> &mdash; Library Management System &nbsp;|&nbsp; &copy; 2026 Computer Centre, NIT Jalandhar
+</div>
+
+<script>
+const API='api.php';
+let seats = {};
+const FLOOR_TOTALS = {G:42, 1:114, 2:142, 3:96};
+function sid(f,n){ return f+'-'+n; }
+
+function makeTable(f, startN, perSide, bothSides=true){
+  const wrap = document.createElement('div'); wrap.className = 'table-unit';
+  const topRow = document.createElement('div'); topRow.className = 'seat-row';
+  for(let i = 0; i < perSide; i++) topRow.appendChild(makeSeat(f, startN + i));
+  const tbl = document.createElement('div'); tbl.className = 'table-block';
+  tbl.style.cssText = 'width:'+(perSide*29)+'px;height:20px;'; tbl.textContent = 'TABLE';
+  wrap.appendChild(topRow); wrap.appendChild(tbl);
+  if(bothSides){
+    const botRow = document.createElement('div'); botRow.className = 'seat-row';
+    for(let i = 0; i < perSide; i++) botRow.appendChild(makeSeat(f, startN + perSide + i));
+    wrap.appendChild(botRow);
+  }
+  return wrap;
+}
+
+function makeSeat(f, n){
+  const id = sid(f, n); seats[id] = { occupied: false };
+  const el = document.createElement('div');
+  el.className = 'seat'; el.id = 'seat-'+id; el.textContent = n; el.title = 'Seat '+id;
+  return el;
+}
+
+function mkEl(lbl,bg,w,h){const e=document.createElement('div');e.style.cssText=`width:${w}px;height:${h}px;background:${bg};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#fff;text-transform:uppercase;flex-shrink:0;`;e.textContent=lbl;return e;}
+function mkSp(lbl,w,h){const e=document.createElement('div');e.style.cssText=`width:${w}px;height:${h}px;background:#f0f2f5;border:2px dashed var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:600;color:var(--text3);flex-shrink:0;`;e.textContent=lbl;return e;}
+function sp(){const e=document.createElement('div');e.style.flex='1';return e;}
+function makeElement(lbl,bg,w,h){return mkEl(lbl,bg,w,h);}
+function makeSpace(lbl,w,h){return mkSp(lbl,w,h);}
+
+function buildLayouts(){
+  buildFloor0();
+  buildFloor1();
+  buildFloor2();
+  buildFloor3();
+}
+
+function buildFloor0(){
+  const layout=document.getElementById('layout-G');
+  layout.style.cssText='display:flex;flex-direction:column;gap:12px;';
+  let n=1;
+  const mainRow=document.createElement('div');
+  mainRow.style.cssText='display:flex;gap:20px;align-items:flex-start;';
+  mainRow.appendChild(makeSpace('SPACE',180,220));
+  const rightCol=document.createElement('div');
+  rightCol.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  rightCol.appendChild(makeTable('G',n,6,false));n+=6;
+  for(let t=0;t<3;t++){rightCol.appendChild(makeTable('G',n,6,true));n+=12;}
+  mainRow.appendChild(rightCol);
+  layout.appendChild(mainRow);
+  const botRow0=document.createElement('div');
+  botRow0.style.cssText='display:flex;gap:16px;align-items:center;margin-top:4px;';
+  botRow0.appendChild(makeElement('LIFT','#8b0000',70,36));
+  const ds=document.createElement('div');ds.style.cssText='flex:1;';botRow0.appendChild(ds);
+  botRow0.appendChild(makeElement('DOOR','#555',60,36));
+  const s2=document.createElement('div');s2.style.cssText='flex:1;';botRow0.appendChild(s2);
+  layout.appendChild(botRow0);
+}
+
+function buildFloor1(){
+  const layout=document.getElementById('layout-1');
+  layout.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  let n=1;
+  const mainRow=document.createElement('div');
+  mainRow.style.cssText='display:flex;gap:20px;align-items:flex-start;';
+  const leftCol=document.createElement('div');
+  leftCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  leftCol.appendChild(makeTable('1',n,8,true));n+=16;
+  leftCol.appendChild(makeTable('1',n,8,true));n+=16;
+  leftCol.appendChild(makeTable('1',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('1',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('1',n,6,true));n+=12;
+  const rightCol=document.createElement('div');
+  rightCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  const top910=document.createElement('div');top910.style.cssText='display:flex;gap:3px;';
+  top910.appendChild(makeSeat('1',n));n++;top910.appendChild(makeSeat('1',n));n++;
+  rightCol.appendChild(top910);
+  const r1116=document.createElement('div');r1116.style.cssText='display:flex;flex-direction:column;gap:2px;';
+  const r1116row=document.createElement('div');r1116row.className='seat-row';
+  for(let i=0;i<6;i++){r1116row.appendChild(makeSeat('1',n));n++;}
+  const r1116tbl=document.createElement('div');r1116tbl.className='table-block';
+  r1116tbl.style.cssText='width:'+(6*29)+'px;height:20px;';r1116tbl.textContent='TABLE';
+  r1116.appendChild(r1116row);r1116.appendChild(r1116tbl);
+  rightCol.appendChild(r1116);
+  rightCol.appendChild(makeSpace('SPACE',200,50));
+  rightCol.appendChild(makeTable('1',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('1',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('1',n,6,true));n+=12;
+  mainRow.appendChild(leftCol);mainRow.appendChild(rightCol);
+  layout.appendChild(mainRow);
+  const botRow=document.createElement('div');
+  botRow.style.cssText='display:flex;gap:16px;align-items:center;margin-top:4px;';
+  botRow.appendChild(makeElement('LIFT','#8b0000',70,36));
+  const sp=document.createElement('div');sp.style.cssText='flex:1;';botRow.appendChild(sp);
+  const bot2=document.createElement('div');bot2.style.cssText='display:flex;gap:3px;';
+  bot2.appendChild(makeSeat('1',n));n++;bot2.appendChild(makeSeat('1',n));n++;
+  botRow.appendChild(bot2);
+  botRow.appendChild(makeElement('DOOR','#555',60,36));
+  const sp2=document.createElement('div');sp2.style.cssText='flex:1;';botRow.appendChild(sp2);
+  layout.appendChild(botRow);
+}
+
+function buildFloor2(){
+  const layout=document.getElementById('layout-2');
+  layout.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  let n=1;
+  const mainRow=document.createElement('div');
+  mainRow.style.cssText='display:flex;gap:20px;align-items:flex-start;';
+  const leftCol=document.createElement('div');
+  leftCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  leftCol.appendChild(makeTable('2',n,6,false));n+=6;
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  leftCol.appendChild(makeSpace('SPACE',200,44));
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  const rightCol=document.createElement('div');
+  rightCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  const top78=document.createElement('div');top78.style.cssText='display:flex;gap:3px;';
+  top78.appendChild(makeSeat('2',n));n++;top78.appendChild(makeSeat('2',n));n++;
+  rightCol.appendChild(top78);
+  const asymWrap=document.createElement('div');asymWrap.style.cssText='display:flex;flex-direction:column;gap:2px;';
+  const aTop=document.createElement('div');aTop.className='seat-row';
+  for(let i=0;i<8;i++){aTop.appendChild(makeSeat('2',n));n++;}
+  const aTbl=document.createElement('div');aTbl.className='table-block';
+  aTbl.style.cssText='width:'+(8*29)+'px;height:20px;';aTbl.textContent='TABLE';
+  const aBot=document.createElement('div');aBot.className='seat-row';
+  for(let i=0;i<4;i++){aBot.appendChild(makeSeat('2',n));n++;}
+  asymWrap.appendChild(aTop);asymWrap.appendChild(aTbl);asymWrap.appendChild(aBot);
+  rightCol.appendChild(asymWrap);
+  rightCol.appendChild(makeTable('2',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('2',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('2',n,8,true));n+=16;
+  rightCol.appendChild(makeTable('2',n,8,true));n+=16;
+  rightCol.appendChild(makeTable('2',n,8,false));n+=8;
+  rightCol.appendChild(makeTable('2',n,8,false));n+=8;
+  mainRow.appendChild(leftCol);mainRow.appendChild(rightCol);
+  layout.appendChild(mainRow);
+  const botRow=document.createElement('div');
+  botRow.style.cssText='display:flex;gap:16px;align-items:center;margin-top:4px;';
+  botRow.appendChild(makeElement('LIFT','#8b0000',70,36));
+  const sp=document.createElement('div');sp.style.cssText='flex:1;';botRow.appendChild(sp);
+  const bot2=document.createElement('div');bot2.style.cssText='display:flex;gap:3px;';
+  bot2.appendChild(makeSeat('2',n));n++;bot2.appendChild(makeSeat('2',n));n++;
+  botRow.appendChild(bot2);
+  botRow.appendChild(makeElement('DOOR','#555',60,36));
+  const sp2=document.createElement('div');sp2.style.cssText='flex:1;';botRow.appendChild(sp2);
+  layout.appendChild(botRow);
+}
+
+function buildFloor3(){
+  const layout=document.getElementById('layout-3');
+  layout.style.cssText='display:flex;flex-direction:column;gap:12px;';
+  let n=1;
+  const topRow=document.createElement('div');
+  topRow.style.cssText='display:flex;gap:16px;align-items:center;';
+  const tl=document.createElement('div');tl.style.cssText='font-size:0.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:8px;';tl.textContent='Top';
+  topRow.appendChild(tl);
+  for(let t=0;t<2;t++){topRow.appendChild(makeTable('3',n,8,true));n+=16;}
+  layout.appendChild(topRow);
+  const midRow=document.createElement('div');
+  midRow.style.cssText='display:flex;gap:16px;align-items:flex-start;';
+  const leftWall=document.createElement('div');
+  leftWall.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:center;';
+  const lwl=document.createElement('div');lwl.style.cssText='font-size:0.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;';lwl.textContent='Left Wall';
+  leftWall.appendChild(lwl);
+  for(let t=0;t<6;t++){leftWall.appendChild(makeTable('3',n,2,true));n+=4;}
+  const center=document.createElement('div');
+  center.style.cssText='flex:1;min-height:220px;background:#f8f9fa;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;';
+  center.innerHTML=`<svg width="100%" height="100%" style="position:absolute;top:0;left:0;opacity:0.15"><line x1="0" y1="0" x2="100%" y2="100%" stroke="#555" stroke-width="2"/><line x1="100%" y1="0" x2="0" y2="100%" stroke="#555" stroke-width="2"/></svg><span style="font-size:0.75rem;font-weight:700;color:var(--text3);z-index:1;">OPEN SPACE</span>`;
+  const rightWall=document.createElement('div');
+  rightWall.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:center;';
+  const rwl=document.createElement('div');rwl.style.cssText='font-size:0.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;';rwl.textContent='Right Wall';
+  rightWall.appendChild(rwl);
+  for(let t=0;t<6;t++){rightWall.appendChild(makeTable('3',n,2,true));n+=4;}
+  midRow.appendChild(leftWall);midRow.appendChild(center);midRow.appendChild(rightWall);
+  layout.appendChild(midRow);
+  const botRow=document.createElement('div');
+  botRow.style.cssText='display:flex;gap:16px;align-items:center;';
+  botRow.appendChild(makeElement('LIFT','#8b0000',70,36));
+  const sp=document.createElement('div');sp.style.cssText='flex:1;';botRow.appendChild(sp);
+  botRow.appendChild(makeTable('3',n,8,true));
+  const sp2=document.createElement('div');sp2.style.cssText='flex:1;';botRow.appendChild(sp2);
+  layout.appendChild(botRow);
+}
+
+function switchFloor(f){
+  document.querySelectorAll('.floor-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.floor-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('ftab-'+f).classList.add('active');
+  document.getElementById('floor-'+f).classList.add('active');
+}
+
+function updateSeat(id){
+  const el = document.getElementById('seat-'+id);
+  if(!el) return;
+  if(seats[id]?.occupied) el.classList.add('occupied');
+  else el.classList.remove('occupied');
+}
+
+function updateStats(){
+  const occ = Object.values(seats).filter(s => s.occupied).length;
+  const total = 394;
+  document.getElementById('availCount').textContent = total - occ;
+  document.getElementById('occCount').textContent = occ;
+  Object.keys(FLOOR_TOTALS).forEach(f => {
+    let fOcc = 0, fTotal = FLOOR_TOTALS[f];
+    for(let n = 1; n <= fTotal; n++){ if(seats[sid(f,n)]?.occupied) fOcc++; }
+    const av = document.getElementById(f+'f-avail'), oc = document.getElementById(f+'f-occ'), tc = document.getElementById('fc-'+f);
+    if(av) av.textContent = fTotal - fOcc;
+    if(oc) oc.textContent = fOcc;
+    if(tc) tc.textContent = (fTotal - fOcc) + ' free';
+  });
+}
+
+function mapId(id){
+  if(/^[G123]-\d+$/.test(id)) return id;
+  const m=id.match(/^([AB])(\d+)$/);if(!m)return id;
+  const seq=m[1]==='A'?parseInt(m[2]):200+parseInt(m[2]);
+  if(seq<=42)  return 'G-'+seq;
+  if(seq<=156) return '1-'+(seq-42);
+  if(seq<=300) return '2-'+(seq-156);
+  return '3-'+(seq-300);
+}
+
+function connectWS(){
+  pollSeats();
+  setInterval(pollSeats, 3000);
+}
+
+async function pollSeats(){
+  try {
+    const r = await fetch(API+'?action=get-seats');
+    const res = await r.json();
+    const data = res.data || res;
+    if(typeof data === 'object' && !data.error){
+      seats={};
+      Object.keys(data).forEach(k=>{ seats[mapId(k)]=data[k]; });
+      Object.keys(seats).forEach(updateSeat);
+      updateStats();
+      document.getElementById('wsDot').className='ws-dot on';
+      document.getElementById('wsLabel').textContent='Live';
+      document.getElementById('offlineBanner').classList.remove('show');
+    }
+  } catch(e){
+    document.getElementById('wsDot').className='ws-dot';
+    document.getElementById('wsLabel').textContent='Offline';
+    document.getElementById('offlineBanner').classList.add('show');
+  }
+}
+
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('date').textContent = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+buildLayouts(); connectWS(); updateClock(); setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
