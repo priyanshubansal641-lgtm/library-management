@@ -1,7 +1,7 @@
-FROM php:8.2-apache
-RUN docker-php-ext-install pdo pdo_mysql
-COPY . /var/www/html/
-RUN chown -R www-data:www-data /var/www/html
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-CMD ["/start.sh"]
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json .
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "server/index.js"]

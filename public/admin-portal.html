@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library Admin Portal - NIT Jalandhar</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#8b0000;--primary-d:#6b0000;--primary-l:#fdf0f0;--primary-b:#f5d0d0;
+  --bg:#f0f2f5;--surface:#fff;--border:#dde1e7;
+  --text:#1a1a2e;--text2:#555;--text3:#999;
+  --green:#2e7d32;--green-s:#e8f5e9;--green-b:#a5d6a7;
+  --red:#c62828;--red-s:#ffebee;--red-b:#ef9a9a;
+  --blue:#1565c0;--blue-s:#e3f2fd;
+  --amber:#e65100;--amber-s:#fff3e0;
+  --radius:6px;--shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+.header{background:#fff;border-bottom:3px solid var(--primary);padding:8px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left .hi{font-size:0.68rem;font-weight:500;color:var(--primary);}
+.header-left h1{font-size:0.9rem;font-weight:700;color:var(--primary);}
+.header-left p{font-size:0.65rem;color:var(--text2);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.ws-pill{display:flex;align-items:center;gap:6px;background:#f8f9fa;border:1px solid var(--border);border-radius:4px;padding:5px 12px;}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--red);transition:background .3s;}
+.ws-dot.on{background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.user-badge{background:var(--primary-l);border:1px solid var(--primary-b);border-radius:4px;padding:5px 12px;font-size:0.78rem;font-weight:700;color:var(--primary);}
+.clock{font-family:'Roboto Mono',monospace;font-size:1.1rem;font-weight:500;color:var(--primary);text-align:center;}
+.date{font-size:0.65rem;color:var(--text2);margin-top:2px;text-align:center;}
+
+.body{padding:24px 28px;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;border-left:4px solid var(--primary);}
+.stat-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);}
+.stat-val{font-size:1.7rem;font-weight:700;margin-top:3px;}
+.c-blue{color:var(--blue);}.c-green{color:var(--green);}.c-red{color:var(--red);}.c-amber{color:var(--amber);}.c-pink{color:#880e4f;}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+.card-title{font-size:0.85rem;font-weight:700;color:var(--primary);margin-bottom:12px;}
+
+.floor-tabs-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;}
+.floor-tab{padding:9px 16px;border:none;background:transparent;font-family:'Roboto',sans-serif;font-size:0.78rem;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+.floor-tab:hover{color:var(--primary);}
+.floor-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:700;}
+.floor-tab .tc{font-size:0.62rem;background:var(--primary-l);color:var(--primary);border-radius:10px;padding:1px 6px;margin-left:4px;font-weight:700;}
+.floor-tab.active .tc{background:var(--primary);color:#fff;}
+.floor-panel{display:none;} .floor-panel.active{display:block;}
+
+.table-unit{display:inline-flex;flex-direction:column;align-items:center;gap:3px;margin:0 8px 14px 0;}
+.seat-row{display:flex;gap:3px;}
+.table-block{background:#e8d5b0;border:1.5px solid #c4a96e;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700;color:#7a5c1e;text-transform:uppercase;letter-spacing:0.5px;}
+.a-seat{width:26px;height:26px;border-radius:3px;background:var(--green-s);border:1px solid var(--green-b);display:flex;align-items:center;justify-content:center;font-size:0.48rem;font-weight:700;color:var(--green);cursor:pointer;transition:all .15s;flex-shrink:0;}
+.a-seat:hover{transform:scale(1.2);z-index:5;box-shadow:0 2px 6px rgba(46,125,50,0.3);}
+.a-seat.occ{background:var(--red-s);border-color:var(--red-b);color:var(--red);}
+.tooltip{position:fixed;background:var(--text);color:#fff;padding:4px 9px;border-radius:4px;font-size:0.68rem;z-index:9999;pointer-events:none;display:none;white-space:nowrap;font-family:'Roboto Mono',monospace;}
+
+.logs-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.filter-btns{display:flex;gap:4px;flex-wrap:wrap;}
+.fbtn{padding:4px 11px;border-radius:4px;border:1.5px solid var(--border);background:#f8f9fa;font-family:'Roboto',sans-serif;font-size:0.7rem;font-weight:500;cursor:pointer;color:var(--text2);transition:all .2s;}
+.fbtn:hover{border-color:var(--primary);color:var(--primary);}
+.fbtn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.log-tabs{display:flex;gap:5px;margin-bottom:12px;}
+.ltab{padding:5px 14px;border-radius:4px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'Roboto',sans-serif;font-size:0.75rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.ltab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.log-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+.log-table th{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);border-bottom:2px solid var(--border);padding:7px 10px;text-align:left;background:#f8f9fa;}
+.log-table td{padding:9px 10px;border-bottom:1px solid #f0f2f5;color:var(--text);}
+.log-table tr:last-child td{border-bottom:none;}
+.log-table tr:hover td{background:#fafafa;}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:0.65rem;font-weight:700;}
+.b-green{background:var(--green-s);color:var(--green);}.b-red{background:var(--red-s);color:var(--red);}
+.b-blue{background:var(--blue-s);color:var(--blue);}.b-amber{background:var(--amber-s);color:var(--amber);}
+.rel-btn{padding:3px 8px;background:var(--red-s);color:var(--red);border:1px solid var(--red-b);border-radius:3px;font-family:'Roboto',sans-serif;font-size:0.68rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.rel-btn:hover{background:var(--red);color:#fff;}
+</style>
+</head>
+<body>
+<div id="portal" style="display:none;">
+
+  
+  <div class="header">
+    <div class="header-left">
+      <img src="nitj_logo.png" alt="NITJ Logo" style="height:42px;width:auto;object-fit:contain;">
+      <div>
+        <div class="hi">&#2337;&#2366; &#2348;&#2368; &#2310;&#2352; &#2309;&#2350;&#2381;&#2348;&#2375;&#2337;&#2325;&#2352; &#2352;&#2366;&#2359;&#2381;&#2335;&#2381;&#2352;&#2368;&#2351; &#2346;&#2381;&#2352;&#2380;&#2342;&#2381;&#2351;&#2379;&#2327;&#2367;&#2325;&#2368; &#2360;&#2306;&#2360;&#2381;&#2341;&#2366;&#2344;, &#2332;&#2366;&#2354;&#2344;&#2381;&#2343;&#2352;</div>
+        <h1>Dr. B.R. Ambedkar NIT Jalandhar</h1>
+        <p>Library &mdash; Admin Portal</p>
+      </div>
+    </div>
+    <div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="date" id="date">--</div>
+    </div>
+    <div class="header-right">
+      <div class="ws-pill">
+        <div class="ws-dot" id="wsDot"></div>
+        <span id="wsLabel" style="font-size:0.72rem;color:var(--text2);">Connecting</span>
+      </div>
+      <div class="user-badge" id="userBadge">&#128100; Admin</div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Total Seats</div><div class="stat-val c-blue" id="adTotal">394</div></div>
+      <div class="stat-card"><div class="stat-label">Available</div><div class="stat-val c-green" id="adAvail">394</div></div>
+      <div class="stat-card"><div class="stat-label">Occupied</div><div class="stat-val c-red" id="adOcc">0</div></div>
+      <div class="stat-card"><div class="stat-label">Today Students</div><div class="stat-val c-amber" id="adStudents">0</div></div>
+      <div class="stat-card"><div class="stat-label">Today Visitors</div><div class="stat-val c-pink" id="adVisitors">0</div></div>
+    </div>
+
+    
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">&#129681; Seat Map</div>
+        <span style="font-size:0.65rem;color:var(--text3);">Click occupied seat to release</span>
+      </div>
+      <div class="floor-tabs-bar">
+        <button class="floor-tab active" id="aftab-G" onclick="switchFloor('G')">Ground Floor <span class="tc" id="afc-G">42</span></button>
+        <button class="floor-tab" id="aftab-1" onclick="switchFloor('1')">1st Floor <span class="tc" id="afc-1">114</span></button>
+        <button class="floor-tab" id="aftab-2" onclick="switchFloor('2')">2nd Floor <span class="tc" id="afc-2">144</span></button>
+        <button class="floor-tab" id="aftab-3" onclick="switchFloor('3')">3rd Floor <span class="tc" id="afc-3">90</span></button>
+      </div>
+      <div class="floor-panel active" id="afloor-G"><div id="adminGridG" style="display:flex;flex-wrap:wrap;gap:16px;"></div></div>
+      <div class="floor-panel" id="afloor-1"><div id="adminGrid1" style="display:flex;flex-wrap:wrap;gap:16px;"></div></div>
+      <div class="floor-panel" id="afloor-2"><div id="adminGrid2" style="display:flex;flex-wrap:wrap;gap:16px;"></div></div>
+      <div class="floor-panel" id="afloor-3"><div id="adminGrid3" style="display:flex;flex-wrap:wrap;gap:16px;"></div></div>
+    </div>
+
+    
+    <div class="card">
+      <div class="logs-top">
+        <div class="card-title" style="margin-bottom:0;">&#128203; Activity Logs</div>
+        <div class="filter-btns">
+          <button class="fbtn active" id="df-today" onclick="setFilter('today')">Today</button>
+          <button class="fbtn" id="df-week" onclick="setFilter('week')">Week</button>
+          <button class="fbtn" id="df-month" onclick="setFilter('month')">Month</button>
+          <button class="fbtn" id="df-all" onclick="setFilter('all')">All</button>
+          <button class="fbtn" onclick="refreshLogs()">&#128260;</button>
+          <button class="fbtn" onclick="exportCSV()" style="background:var(--primary);color:#fff;border-color:var(--primary);">&#128229; Export CSV</button>
+          <button class="fbtn" onclick="printReport()" style="background:#1565c0;color:#fff;border-color:#1565c0;">&#128424; Print Report</button>
+          <button class="fbtn" onclick="resetAllSeats()" style="background:#c62828;color:#fff;border-color:#c62828;">&#9888; Release All Seats</button>
+        </div>
+      </div>
+      <div class="log-tabs" style="margin-top:12px;">
+        <button class="ltab active" id="tabS" onclick="switchTab('student')">&#127891; Students</button>
+        <button class="ltab" id="tabV" onclick="switchTab('visitor')">&#128100; Visitors</button>
+      </div>
+      <div id="studentLogsDiv" style="overflow-x:auto;">
+        <table class="log-table">
+          <thead><tr id="sHead"></tr></thead>
+          <tbody id="studentTbody"><tr><td colspan="9" style="text-align:center;color:var(--text3);padding:28px;">No data</td></tr></tbody>
+        </table>
+      </div>
+      <div id="visitorLogsDiv" style="overflow-x:auto;display:none;">
+        <table class="log-table">
+          <thead><tr id="vHead"></tr></thead>
+          <tbody id="visitorTbody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:28px;">No data</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+function getParam(k){ return new URLSearchParams(window.location.search).get(k); }
+let currentUser = { name: getParam('user')||'Admin', role: getParam('role')||'admin' };
+const API='api.php';
+let seats = {}, currentFilter = 'today';
+let cachedStudents = [], cachedVisitors = [];
+const FLOOR_TOTALS = {G:42, 1:114, 2:142, 3:96};
+function sid(f,n){ return f+'-'+n; }
+
+window.addEventListener('load', () => {
+  document.getElementById('portal').style.display = 'block';
+  document.getElementById('userBadge').textContent = currentUser.name;
+  buildGrids(); connectWS(); updateClock(); setInterval(updateClock, 1000);
+});
+
+function makeTable(f, startN, perSide, bothSides=true){
+  const wrap = document.createElement('div'); wrap.className = 'table-unit';
+  const topRow = document.createElement('div'); topRow.className = 'seat-row';
+  for(let i = 0; i < perSide; i++) topRow.appendChild(makeSeat(f, startN+i));
+  const tbl = document.createElement('div'); tbl.className = 'table-block';
+  tbl.style.cssText = 'width:'+(perSide*29)+'px;height:20px;'; tbl.textContent = 'TABLE';
+  wrap.appendChild(topRow); wrap.appendChild(tbl);
+  if(bothSides){
+    const botRow = document.createElement('div'); botRow.className = 'seat-row';
+    for(let i = 0; i < perSide; i++) botRow.appendChild(makeSeat(f, startN+perSide+i));
+    wrap.appendChild(botRow);
+  }
+  return wrap;
+}
+
+function mkEl(lbl,bg,w,h){const e=document.createElement('div');e.style.cssText=`width:${w}px;height:${h}px;background:${bg};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#fff;text-transform:uppercase;flex-shrink:0;`;e.textContent=lbl;return e;}
+function mkSp(lbl,w,h){const e=document.createElement('div');e.style.cssText=`width:${w}px;height:${h}px;background:#f0f2f5;border:2px dashed var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:600;color:var(--text3);flex-shrink:0;`;e.textContent=lbl;return e;}
+function sp(){const e=document.createElement('div');e.style.flex='1';return e;}
+
+function buildGrids(){
+  buildFloor0();
+  buildFloor1();
+  buildFloor2();
+  buildFloor3();
+}
+
+function mkAdminEl(lbl,bg,w,h){const e=document.createElement('div');e.style.cssText=`width:${w}px;height:${h}px;background:${bg};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#fff;text-transform:uppercase;flex-shrink:0;`;e.textContent=lbl;return e;}
+function mkAdminSpace(lbl,w,h){const e=document.createElement('div');e.style.cssText=`width:${w}px;height:${h}px;background:#f0f2f5;border:2px dashed var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:600;color:var(--text3);flex-shrink:0;`;e.textContent=lbl;return e;}
+function makeAdminTable(f,startN,perSide,bothSides=true){return makeTable(f,startN,perSide,bothSides);}
+
+function buildFloor0(){
+  const layout=document.getElementById('adminGridG');
+  layout.style.cssText='display:flex;flex-direction:column;gap:12px;';
+  let n=1;
+  const mainRow=document.createElement('div');
+  mainRow.style.cssText='display:flex;gap:20px;align-items:flex-start;';
+  mainRow.appendChild(mkAdminSpace('SPACE',180,220));
+  const rightCol=document.createElement('div');
+  rightCol.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  rightCol.appendChild(makeTable('G',n,6,false));n+=6;
+  for(let t=0;t<3;t++){rightCol.appendChild(makeTable('G',n,6,true));n+=12;}
+  mainRow.appendChild(rightCol);
+  layout.appendChild(mainRow);
+  const botRow0=document.createElement('div');
+  botRow0.style.cssText='display:flex;gap:16px;align-items:center;margin-top:4px;';
+  botRow0.appendChild(mkAdminEl('LIFT','#8b0000',70,36));
+  const ds=document.createElement('div');ds.style.cssText='flex:1;';botRow0.appendChild(ds);
+  botRow0.appendChild(mkAdminEl('DOOR','#555',60,36));
+  const s2=document.createElement('div');s2.style.cssText='flex:1;';botRow0.appendChild(s2);
+  layout.appendChild(botRow0);
+}
+
+function buildFloor1(){
+  const layout=document.getElementById('adminGrid1');
+  layout.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  let n=1;
+  const mainRow=document.createElement('div');
+  mainRow.style.cssText='display:flex;gap:20px;align-items:flex-start;';
+  const leftCol=document.createElement('div');
+  leftCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  leftCol.appendChild(makeTable('1',n,8,true));n+=16;
+  leftCol.appendChild(makeTable('1',n,8,true));n+=16;
+  leftCol.appendChild(makeTable('1',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('1',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('1',n,6,true));n+=12;
+  const rightCol=document.createElement('div');
+  rightCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  const top910=document.createElement('div');top910.style.cssText='display:flex;gap:3px;';
+  top910.appendChild(makeSeat('1',n));n++;top910.appendChild(makeSeat('1',n));n++;
+  rightCol.appendChild(top910);
+  const r1116=document.createElement('div');r1116.style.cssText='display:flex;flex-direction:column;gap:2px;';
+  const r1116row=document.createElement('div');r1116row.className='seat-row';
+  for(let i=0;i<6;i++){r1116row.appendChild(makeSeat('1',n));n++;}
+  const r1116tbl=document.createElement('div');r1116tbl.className='table-block';
+  r1116tbl.style.cssText='width:'+(6*29)+'px;height:20px;';r1116tbl.textContent='TABLE';
+  r1116.appendChild(r1116row);r1116.appendChild(r1116tbl);
+  rightCol.appendChild(r1116);
+  rightCol.appendChild(mkAdminSpace('SPACE',200,50));
+  rightCol.appendChild(makeTable('1',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('1',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('1',n,6,true));n+=12;
+  mainRow.appendChild(leftCol);mainRow.appendChild(rightCol);
+  layout.appendChild(mainRow);
+  const botRow=document.createElement('div');
+  botRow.style.cssText='display:flex;gap:16px;align-items:center;margin-top:4px;';
+  botRow.appendChild(mkAdminEl('LIFT','#8b0000',70,36));
+  const sp=document.createElement('div');sp.style.cssText='flex:1;';botRow.appendChild(sp);
+  const bot2=document.createElement('div');bot2.style.cssText='display:flex;gap:3px;';
+  bot2.appendChild(makeSeat('1',n));n++;bot2.appendChild(makeSeat('1',n));n++;
+  botRow.appendChild(bot2);
+  botRow.appendChild(mkAdminEl('DOOR','#555',60,36));
+  const sp2=document.createElement('div');sp2.style.cssText='flex:1;';botRow.appendChild(sp2);
+  layout.appendChild(botRow);
+}
+
+function buildFloor2(){
+  const layout=document.getElementById('adminGrid2');
+  layout.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  let n=1;
+  const mainRow=document.createElement('div');
+  mainRow.style.cssText='display:flex;gap:20px;align-items:flex-start;';
+  const leftCol=document.createElement('div');
+  leftCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  leftCol.appendChild(makeTable('2',n,6,false));n+=6;
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  leftCol.appendChild(mkAdminSpace('SPACE',200,44));
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  leftCol.appendChild(makeTable('2',n,6,true));n+=12;
+  const rightCol=document.createElement('div');
+  rightCol.style.cssText='display:flex;flex-direction:column;gap:8px;';
+  const top78=document.createElement('div');top78.style.cssText='display:flex;gap:3px;';
+  top78.appendChild(makeSeat('2',n));n++;top78.appendChild(makeSeat('2',n));n++;
+  rightCol.appendChild(top78);
+  const asymWrap=document.createElement('div');asymWrap.style.cssText='display:flex;flex-direction:column;gap:2px;';
+  const aTop=document.createElement('div');aTop.className='seat-row';
+  for(let i=0;i<8;i++){aTop.appendChild(makeSeat('2',n));n++;}
+  const aTbl=document.createElement('div');aTbl.className='table-block';
+  aTbl.style.cssText='width:'+(8*29)+'px;height:20px;';aTbl.textContent='TABLE';
+  const aBot=document.createElement('div');aBot.className='seat-row';
+  for(let i=0;i<4;i++){aBot.appendChild(makeSeat('2',n));n++;}
+  asymWrap.appendChild(aTop);asymWrap.appendChild(aTbl);asymWrap.appendChild(aBot);
+  rightCol.appendChild(asymWrap);
+  rightCol.appendChild(makeTable('2',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('2',n,6,true));n+=12;
+  rightCol.appendChild(makeTable('2',n,8,true));n+=16;
+  rightCol.appendChild(makeTable('2',n,8,true));n+=16;
+  rightCol.appendChild(makeTable('2',n,8,false));n+=8;
+  rightCol.appendChild(makeTable('2',n,8,false));n+=8;
+  mainRow.appendChild(leftCol);mainRow.appendChild(rightCol);
+  layout.appendChild(mainRow);
+  const botRow=document.createElement('div');
+  botRow.style.cssText='display:flex;gap:16px;align-items:center;margin-top:4px;';
+  botRow.appendChild(mkAdminEl('LIFT','#8b0000',70,36));
+  const sp=document.createElement('div');sp.style.cssText='flex:1;';botRow.appendChild(sp);
+  const bot2=document.createElement('div');bot2.style.cssText='display:flex;gap:3px;';
+  bot2.appendChild(makeSeat('2',n));n++;bot2.appendChild(makeSeat('2',n));n++;
+  botRow.appendChild(bot2);
+  botRow.appendChild(mkAdminEl('DOOR','#555',60,36));
+  const sp2=document.createElement('div');sp2.style.cssText='flex:1;';botRow.appendChild(sp2);
+  layout.appendChild(botRow);
+}
+
+function buildFloor3(){
+  const layout=document.getElementById('adminGrid3');
+  layout.style.cssText='display:flex;flex-direction:column;gap:12px;';
+  let n=1;
+  const topRow=document.createElement('div');
+  topRow.style.cssText='display:flex;gap:16px;align-items:center;';
+  const tl=document.createElement('div');tl.style.cssText='font-size:0.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:8px;';tl.textContent='Top';
+  topRow.appendChild(tl);
+  for(let t=0;t<2;t++){topRow.appendChild(makeTable('3',n,8,true));n+=16;}
+  layout.appendChild(topRow);
+  const midRow=document.createElement('div');
+  midRow.style.cssText='display:flex;gap:16px;align-items:flex-start;';
+  const leftWall=document.createElement('div');
+  leftWall.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:center;';
+  const lwl=document.createElement('div');lwl.style.cssText='font-size:0.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;';lwl.textContent='Left Wall';
+  leftWall.appendChild(lwl);
+  for(let t=0;t<6;t++){leftWall.appendChild(makeTable('3',n,2,true));n+=4;}
+  const center=document.createElement('div');
+  center.style.cssText='flex:1;min-height:220px;background:#f8f9fa;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;';
+  center.innerHTML=`<svg width="100%" height="100%" style="position:absolute;top:0;left:0;opacity:0.15"><line x1="0" y1="0" x2="100%" y2="100%" stroke="#555" stroke-width="2"/><line x1="100%" y1="0" x2="0" y2="100%" stroke="#555" stroke-width="2"/></svg><span style="font-size:0.75rem;font-weight:700;color:var(--text3);z-index:1;">OPEN SPACE</span>`;
+  const rightWall=document.createElement('div');
+  rightWall.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:center;';
+  const rwl=document.createElement('div');rwl.style.cssText='font-size:0.62rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;';rwl.textContent='Right Wall';
+  rightWall.appendChild(rwl);
+  for(let t=0;t<6;t++){rightWall.appendChild(makeTable('3',n,2,true));n+=4;}
+  midRow.appendChild(leftWall);midRow.appendChild(center);midRow.appendChild(rightWall);
+  layout.appendChild(midRow);
+  const botRow=document.createElement('div');
+  botRow.style.cssText='display:flex;gap:16px;align-items:center;';
+  botRow.appendChild(mkAdminEl('LIFT','#8b0000',70,36));
+  const sp=document.createElement('div');sp.style.cssText='flex:1;';botRow.appendChild(sp);
+  botRow.appendChild(makeTable('3',n,8,true));
+  const sp2=document.createElement('div');sp2.style.cssText='flex:1;';botRow.appendChild(sp2);
+  layout.appendChild(botRow);
+}
+
+function makeSeat(f, n){
+  const id = sid(f, n);
+  seats[id] = { occupied: false };
+  const el = document.createElement('div');
+  el.className = 'a-seat'; el.id = 'aseat-'+id; el.textContent = n; el.title = id;
+  el.addEventListener('click', () => releaseSeat(id));
+  el.addEventListener('mousemove', e => showTip(e, id));
+  el.addEventListener('mouseleave', () => document.getElementById('tooltip').style.display='none');
+  return el;
+}
+
+function switchFloor(f){
+  document.querySelectorAll('.floor-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.floor-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('aftab-'+f).classList.add('active');
+  document.getElementById('afloor-'+f).classList.add('active');
+}
+
+function mapId(id){
+  if(/^[G123]-\d+$/.test(id)) return id;
+  const m=id.match(/^([AB])(\d+)$/);if(!m)return id;
+  const seq=m[1]==='A'?parseInt(m[2]):200+parseInt(m[2]);
+  if(seq<=42)  return 'G-'+seq;
+  if(seq<=156) return '1-'+(seq-42);
+  if(seq<=300) return '2-'+(seq-156);
+  return '3-'+(seq-300);
+}
+
+function connectWS(){
+  pollSeats();
+  setInterval(pollSeats, 3000);
+  refreshLogs();
+}
+
+async function pollSeats(){
+  try {
+    const r = await fetch(API+'?action=get-seats');
+    const res = await r.json();
+    const data = res.data || res;
+    if(typeof data === 'object' && !data.error){
+      seats={};
+      Object.keys(data).forEach(k=>{ seats[mapId(k)]=data[k]; });
+      Object.keys(seats).forEach(updateSeat);
+      updateStats();
+      document.getElementById('wsDot').className='ws-dot on';
+      document.getElementById('wsLabel').textContent='Live';
+    }
+  } catch(e){
+    document.getElementById('wsDot').className='ws-dot';
+    document.getElementById('wsLabel').textContent='Offline';
+  }
+}
+
+async function emit(action, data={}){
+  try {
+    const r = await fetch(API+'?action='+action, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    const res = await r.json();
+    if(action==='admin-release-seat') pollSeats();
+    if(action==='get-student-logs'){ cachedStudents=res||[]; renderStudentLogs(res); }
+    if(action==='get-visitor-logs'){ cachedVisitors=res||[]; renderVisitorLogs(res); }
+  } catch(e){}
+}
+
+function updateSeat(id){
+  const el = document.getElementById('aseat-'+id);
+  if(!el) return;
+  if(seats[id]?.occupied){ el.classList.add('occ'); el.title = id + (seats[id].studentName ? ' - '+seats[id].studentName : ''); }
+  else{ el.classList.remove('occ'); el.title = id; }
+}
+
+function updateStats(){
+  const occ = Object.values(seats).filter(s => s.occupied).length;
+  document.getElementById('adTotal').textContent = 394;
+  document.getElementById('adAvail').textContent = 394 - occ;
+  document.getElementById('adOcc').textContent = occ;
+  Object.keys(FLOOR_TOTALS).forEach(f => {
+    let fOcc = 0, fTotal = FLOOR_TOTALS[f];
+    for(let n = 1; n <= fTotal; n++){ if(seats[sid(f,n)]?.occupied) fOcc++; }
+    const tc = document.getElementById('afc-'+f);
+    if(tc) tc.textContent = (fTotal - fOcc) + ' free';
+  });
+}
+
+function releaseSeat(id){
+  if(!seats[id]?.occupied) return;
+  if(confirm('Release seat '+id+'?')){
+    fetch(API+'?action=admin-release-seat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seatId:id})}).then(()=>pollSeats());
+  }
+}
+
+function showTip(e, id){
+  const t = document.getElementById('tooltip'), s = seats[id];
+  if(s?.occupied){ t.textContent = id+(s.studentName?' - '+s.studentName:''); t.style.display='block'; t.style.left=(e.clientX+12)+'px'; t.style.top=(e.clientY-28)+'px'; }
+}
+
+function setFilter(f){
+  currentFilter = f;
+  ['today','week','month','all'].forEach(x => document.getElementById('df-'+x).classList.toggle('active', x===f));
+  refreshLogs();
+}
+function refreshLogs(){
+  fetch(API+'?action=get-student-logs&filter='+currentFilter).then(r=>r.json()).then(res=>{cachedStudents=res||[];renderStudentLogs(res);});
+  fetch(API+'?action=get-visitor-logs&filter='+currentFilter).then(r=>r.json()).then(res=>{cachedVisitors=res||[];renderVisitorLogs(res);});
+}
+
+function switchTab(tab){
+  document.getElementById('studentLogsDiv').style.display = tab==='student'?'block':'none';
+  document.getElementById('visitorLogsDiv').style.display = tab==='visitor'?'block':'none';
+  document.getElementById('tabS').classList.toggle('active', tab==='student');
+  document.getElementById('tabV').classList.toggle('active', tab==='visitor');
+}
+
+function th(t){ return '<th>'+t+'</th>'; }
+
+function renderStudentLogs(logs){
+  document.getElementById('adStudents').textContent = logs?.length||0;
+  document.getElementById('sHead').innerHTML = [th('Roll'),th('Name'),th('Seat'),th('Date'),th('Entry'),th('Exit'),th('Duration'),th('Status'),th('Action')].join('');
+  const tb = document.getElementById('studentTbody');
+  if(!logs?.length){ tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:28px;">No student logs</td></tr>'; return; }
+  tb.innerHTML = logs.map(l => '<tr>'
+    +'<td><span style="font-family:\'Roboto Mono\',monospace;font-size:0.73rem;">'+(l.roll_number||'-')+'</span></td>'
+    +'<td><strong>'+(l.name||'-')+'</strong></td>'
+    +'<td><span class="badge b-blue">'+(l.seat_id||'-')+'</span></td>'
+    +'<td style="color:var(--text2);font-size:0.73rem;">'+(l.entry_date||'-')+'</td>'
+    +'<td>'+(l.entry_time_fmt||'-')+'</td>'
+    +'<td>'+(l.exit_time_fmt||'-')+'</td>'
+    +'<td style="font-family:\'Roboto Mono\',monospace;font-size:0.73rem;">'+(l.duration||'-')+'</td>'
+    +'<td>'+(l.exit_time?'<span class="badge b-green">Exited</span>':'<span class="badge b-red">Inside</span>')+'</td>'
+    +'<td>'+(!l.exit_time?'<button class="rel-btn" onclick="releaseSeat(\''+l.seat_id+'\')">Release</button>':'-')+'</td>'
+    +'</tr>').join('');
+}
+
+function renderVisitorLogs(logs){
+  document.getElementById('adVisitors').textContent = logs?.length||0;
+  document.getElementById('vHead').innerHTML = [th('Name'),th('Mobile'),th('Email'),th('Purpose'),th('Time'),th('Date')].join('');
+  const tb = document.getElementById('visitorTbody');
+  if(!logs?.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:28px;">No visitors</td></tr>'; return; }
+  tb.innerHTML = logs.map(l => '<tr>'
+    +'<td><strong>'+l.name+'</strong></td>'
+    +'<td style="font-family:\'Roboto Mono\',monospace;font-size:0.73rem;">'+l.mobile+'</td>'
+    +'<td>'+(l.email||'-')+'</td>'
+    +'<td><span class="badge b-amber">'+(l.purpose||'-')+'</span></td>'
+    +'<td>'+(l.time||'-')+'</td>'
+    +'<td style="color:var(--text2);">'+(l.date||'-')+'</td>'
+    +'</tr>').join('');
+}
+
+function exportCSV(){
+  let csv = 'STUDENT LOGS\nRoll No,Name,Seat,Entry,Exit,Status\n';
+  cachedStudents.forEach(l => { csv += (l.roll_number||'')+','+(l.name||'')+','+(l.seat_id||'')+','+(l.entry_time_fmt||'')+','+(l.exit_time_fmt||'')+(l.exit_time?',Exited':',Inside')+'\n'; });
+  csv += '\nVISITOR LOGS\nName,Mobile,Email,Purpose,Time,Date\n';
+  cachedVisitors.forEach(l => { csv += (l.name||'')+','+(l.mobile||'')+','+(l.email||'')+','+(l.purpose||'')+','+(l.time||'')+','+(l.date||'')+'\n'; });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download: 'library-report-'+new Date().toLocaleDateString('en-IN').replace(/\//g,'-')+'.csv' });
+  a.click();
+}
+
+function resetAllSeats(){
+  if(!confirm('Release all seats? This will log out all students.')) return;
+  fetch(API+'?action=reset-all-seats',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+    .then(r=>r.json()).then(res=>{if(res.success){pollSeats();refreshLogs();}});
+}
+
+function printReport(){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const occ = Object.values(seats).filter(s=>s.occupied).length;
+  let html = `<html><head><title>Library Report - ${dateStr}</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:20px;}
+    h2{color:#8b0000;margin-bottom:4px;}
+    .sub{color:#555;font-size:11px;margin-bottom:16px;}
+    .stats{display:flex;gap:20px;margin-bottom:20px;}
+    .stat{background:#f5f5f5;border-left:4px solid #8b0000;padding:8px 14px;border-radius:4px;}
+    .stat strong{font-size:18px;display:block;}
+    table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+    th{background:#8b0000;color:#fff;padding:6px 10px;text-align:left;font-size:11px;}
+    td{padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;}
+    tr:nth-child(even) td{background:#fafafa;}
+    h3{color:#8b0000;margin:16px 0 8px;}
+    @media print{body{padding:0;}}
+  </style></head><body>
+  <h2>Library Seat Management - Activity Report</h2>
+  <div class="sub">${dateStr} &nbsp;|&nbsp; Filter: ${currentFilter}</div>
+  <div class="stats">
+    <div class="stat"><strong>394</strong>Total Seats</div>
+    <div class="stat"><strong>${394-occ}</strong>Available</div>
+    <div class="stat"><strong>${occ}</strong>Occupied</div>
+    <div class="stat"><strong>${cachedStudents.length}</strong>Students</div>
+    <div class="stat"><strong>${cachedVisitors.length}</strong>Visitors</div>
+  </div>
+  <h3>Student Logs</h3>
+  <table><tr><th>Roll No</th><th>Name</th><th>Seat</th><th>Date</th><th>Entry</th><th>Exit</th><th>Duration</th><th>Status</th></tr>`;
+  if(cachedStudents.length){
+    cachedStudents.forEach(l=>{
+      html+=`<tr><td>${l.roll_number||'-'}</td><td>${l.name||'-'}</td><td>${l.seat_id||'-'}</td><td>${l.entry_date||'-'}</td><td>${l.entry_time_fmt||'-'}</td><td>${l.exit_time_fmt||'-'}</td><td>${l.duration||'-'}</td><td>${l.exit_time?'Exited':'Inside'}</td></tr>`;
+    });
+  } else { html+=`<tr><td colspan="8" style="text-align:center;color:#999;">No student logs</td></tr>`; }
+  html+=`</table><h3>Visitor Logs</h3>
+  <table><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Purpose</th><th>Time</th><th>Date</th></tr>`;
+  if(cachedVisitors.length){
+    cachedVisitors.forEach(l=>{
+      html+=`<tr><td>${l.name||'-'}</td><td>${l.mobile||'-'}</td><td>${l.email||'-'}</td><td>${l.purpose||'-'}</td><td>${l.time||'-'}</td><td>${l.date||'-'}</td></tr>`;
+    });
+  } else { html+=`<tr><td colspan="6" style="text-align:center;color:#999;">No visitors</td></tr>`; }
+  html+=`</table></body></html>`;
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(), 500);
+}
+
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('date').textContent = now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+</script>
+</body>
+</html>
